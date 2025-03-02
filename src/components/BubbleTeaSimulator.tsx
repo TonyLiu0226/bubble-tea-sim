@@ -15,7 +15,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const cupRef = useRef<THREE.Group | null>(null);
-  const teaRef = useRef<THREE.Mesh | null>(null);
   const toppingsRef = useRef<THREE.Group | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
@@ -137,41 +136,28 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
       cupRef.current.remove(object);
     }
 
-    const cupMaterial = new THREE.MeshPhysicalMaterial({
-      color: 0xffffff,
-      transparent: true,
-      opacity: 0.3,
-      roughness: 0.1,
-      transmission: 0.9,
-      thickness: 0.2,
-    });
-
-    const cupGeometry = new THREE.CylinderGeometry(1, 0.8, 2.5, 32);
-    const cup = new THREE.Mesh(cupGeometry, cupMaterial);
-    cup.position.y = 0.5;
-    cupRef.current.add(cup);
-
-    const teaGeometry = new THREE.CylinderGeometry(0.95, 0.75, 2, 32);
-    
     const flavorHex = flavorColors[config.flavor];
     console.log("Selected flavor:", config.flavor);
     console.log("Flavor hex color:", flavorHex);
     
     const threeColor = new THREE.Color(flavorHex);
     console.log("THREE.Color object:", threeColor);
-    
-    const teaMaterial = new THREE.MeshStandardMaterial({
+
+    const cupMaterial = new THREE.MeshPhysicalMaterial({
       color: threeColor,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.8,
+      roughness: 0.1,
+      transmission: 0.3,
+      thickness: 0.5,
       emissive: threeColor,
       emissiveIntensity: 0.2,
     });
 
-    const tea = new THREE.Mesh(teaGeometry, teaMaterial);
-    tea.position.y = 0.3;
-    teaRef.current = tea;
-    cupRef.current.add(tea);
+    const cupGeometry = new THREE.CylinderGeometry(1, 0.8, 2.5, 32);
+    const cup = new THREE.Mesh(cupGeometry, cupMaterial);
+    cup.position.y = 0.5;
+    cupRef.current.add(cup);
 
     const strawGeometry = new THREE.CylinderGeometry(0.05, 0.05, 4, 16);
     const strawMaterial = new THREE.MeshStandardMaterial({ color: 0xff5555 });
