@@ -19,7 +19,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
   const toppingsRef = useRef<THREE.Group | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Color mappings for toppings
   const toppingColors = {
     blackPearl: 0x222222,
     pineapple: 0xFFDD00,
@@ -28,16 +27,13 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     jelly: 0xE0F2E9,
   };
 
-  // Initialize Three.js scene
   useEffect(() => {
     if (!mountRef.current) return;
 
-    // Scene
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0xffffff);
     sceneRef.current = scene;
 
-    // Camera
     const camera = new THREE.PerspectiveCamera(
       45,
       mountRef.current.clientWidth / mountRef.current.clientHeight,
@@ -47,7 +43,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     camera.position.set(0, 1.5, 5);
     cameraRef.current = camera;
 
-    // Renderer
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
@@ -56,7 +51,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
-    // Controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.1;
@@ -66,7 +60,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     controls.maxPolarAngle = Math.PI / 2;
     controlsRef.current = controls;
 
-    // Lighting
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
@@ -83,17 +76,14 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     fill2.position.set(5, 3, -5);
     scene.add(fill2);
 
-    // Create cup group
     const cupGroup = new THREE.Group();
     scene.add(cupGroup);
     cupRef.current = cupGroup;
 
-    // Create toppings group
     const toppingsGroup = new THREE.Group();
     scene.add(toppingsGroup);
     toppingsRef.current = toppingsGroup;
 
-    // Animation loop
     const animate = () => {
       if (controlsRef.current) {
         controlsRef.current.update();
@@ -112,7 +102,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     
     animationFrameRef.current = requestAnimationFrame(animate);
 
-    // Handle window resize
     const handleResize = () => {
       if (!mountRef.current || !cameraRef.current || !rendererRef.current) return;
       
@@ -123,7 +112,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     
     window.addEventListener('resize', handleResize);
 
-    // Cleanup
     return () => {
       if (animationFrameRef.current) {
         cancelAnimationFrame(animationFrameRef.current);
@@ -141,17 +129,14 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     };
   }, []);
 
-  // Create or update cup
   useEffect(() => {
     if (!cupRef.current || !sceneRef.current) return;
 
-    // Clear existing cup
     while (cupRef.current.children.length) {
       const object = cupRef.current.children[0];
       cupRef.current.remove(object);
     }
 
-    // Cup geometry
     const cupMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
       transparent: true,
@@ -166,19 +151,21 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     cup.position.y = 0.5;
     cupRef.current.add(cup);
 
-    // Tea geometry - use the selected flavor's color
     const teaGeometry = new THREE.CylinderGeometry(0.95, 0.75, 2, 32);
     
-    // Get color from flavorColors object directly as a hex string
     const flavorHex = flavorColors[config.flavor];
+    console.log("Selected flavor:", config.flavor);
+    console.log("Flavor hex color:", flavorHex);
     
-    // Convert hex string to THREE.Color object
     const threeColor = new THREE.Color(flavorHex);
+    console.log("THREE.Color object:", threeColor);
     
     const teaMaterial = new THREE.MeshStandardMaterial({
       color: threeColor,
       transparent: true,
       opacity: 0.9,
+      emissive: threeColor,
+      emissiveIntensity: 0.2,
     });
 
     const tea = new THREE.Mesh(teaGeometry, teaMaterial);
@@ -186,7 +173,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     teaRef.current = tea;
     cupRef.current.add(tea);
 
-    // Add a straw
     const strawGeometry = new THREE.CylinderGeometry(0.05, 0.05, 4, 16);
     const strawMaterial = new THREE.MeshStandardMaterial({ color: 0xff5555 });
     const straw = new THREE.Mesh(strawGeometry, strawMaterial);
@@ -194,7 +180,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     straw.rotation.x = Math.PI / 10;
     cupRef.current.add(straw);
 
-    // Add lid
     const lidGeometry = new THREE.CylinderGeometry(1.05, 1.05, 0.1, 32);
     const lidMaterial = new THREE.MeshStandardMaterial({ 
       color: 0xffffff,
@@ -205,7 +190,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     lid.position.y = 1.75;
     cupRef.current.add(lid);
 
-    // Add cup rim
     const rimGeometry = new THREE.TorusGeometry(1, 0.05, 16, 32);
     const rimMaterial = new THREE.MeshStandardMaterial({ color: 0xdddddd });
     const rim = new THREE.Mesh(rimGeometry, rimMaterial);
@@ -214,33 +198,28 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     cupRef.current.add(rim);
   }, [config.flavor]);
 
-  // Create or update toppings
   useEffect(() => {
     if (!toppingsRef.current || !sceneRef.current) return;
 
-    // Clear existing toppings
     while (toppingsRef.current.children.length) {
       const object = toppingsRef.current.children[0];
       toppingsRef.current.remove(object);
     }
 
-    // Skip if there are no toppings
     if (config.toppings.length === 0) return;
 
-    // Helper function to create a random position within the tea
     const getRandomPosition = () => {
       const radius = Math.random() * 0.7;
       const angle = Math.random() * Math.PI * 2;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-      const y = Math.random() * 1.2 - 0.5; // Between -0.5 and 0.7 (within the tea)
+      const y = Math.random() * 1.2 - 0.5;
       return new THREE.Vector3(x, y, z);
     };
 
-    // Create toppings based on the configuration
     config.toppings.forEach((toppingType) => {
       let geometry, material;
-      const numberOfPieces = Math.floor(Math.random() * 3) + 3; // 3-5 pieces of each topping
+      const numberOfPieces = Math.floor(Math.random() * 3) + 3;
 
       for (let i = 0; i < numberOfPieces; i++) {
         switch (toppingType) {
@@ -269,7 +248,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
             break;
 
           case "squidLeg":
-            // Create a curved cylinder for squid legs
             const curve = new THREE.CatmullRomCurve3([
               new THREE.Vector3(0, 0, 0),
               new THREE.Vector3(0.1, 0.1, 0),
@@ -303,7 +281,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
         const position = getRandomPosition();
         topping.position.copy(position);
         
-        // Random rotation
         topping.rotation.x = Math.random() * Math.PI;
         topping.rotation.y = Math.random() * Math.PI;
         topping.rotation.z = Math.random() * Math.PI;
