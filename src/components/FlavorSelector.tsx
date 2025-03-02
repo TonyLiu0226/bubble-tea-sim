@@ -8,23 +8,29 @@ interface FlavorSelectorProps {
   onSelectFlavor: (flavor: TeaFlavor) => void;
 }
 
-const flavors: FlavorOption[] = [
+export const flavorColors = {
+  milk: "#F8F4E3",
+  green: "#7FB069",
+  citrus: "#FFBE0B",
+};
+
+export const flavors: FlavorOption[] = [
   {
     id: "milk",
     name: "Milk Tea",
-    color: "#F8F4E3",
+    color: flavorColors.milk,
     description: "Creamy, smooth classic milk tea",
   },
   {
     id: "green",
     name: "Green Tea",
-    color: "#7FB069",
+    color: flavorColors.green,
     description: "Refreshing, earthy green tea",
   },
   {
     id: "citrus",
     name: "Citrus Tea",
-    color: "#FFBE0B",
+    color: flavorColors.citrus,
     description: "Bright, tangy citrus tea",
   },
 ];

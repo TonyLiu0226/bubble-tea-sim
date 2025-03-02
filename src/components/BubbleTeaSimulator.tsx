@@ -1,8 +1,8 @@
-
 import React, { useRef, useEffect } from "react";
 import { BubbleTeaConfig } from "@/types/bubbleTea";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
+import { flavorColors } from "./FlavorSelector";
 
 interface BubbleTeaSimulatorProps {
   config: BubbleTeaConfig;
@@ -19,19 +19,21 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
   const toppingsRef = useRef<THREE.Group | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
-  // Color mappings
-  const flavorColors = {
-    milk: 0xF8F4E3,
-    green: 0x7FB069,
-    citrus: 0xFFBE0B,
-  };
-
+  // Color mappings for toppings
   const toppingColors = {
     blackPearl: 0x222222,
     pineapple: 0xFFDD00,
     octopusBall: 0x6B4226,
     squidLeg: 0xF6D8CE,
     jelly: 0xE0F2E9,
+  };
+
+  // Convert hex color strings to THREE.js compatible color numbers
+  const getColorValue = (hexColor: string) => {
+    // Remove the # if it exists
+    const hex = hexColor.replace('#', '');
+    // Convert to number
+    return parseInt(hex, 16);
   };
 
   // Initialize Three.js scene
@@ -172,10 +174,13 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     cup.position.y = 0.5;
     cupRef.current.add(cup);
 
-    // Tea geometry
+    // Tea geometry - use the selected flavor's color
     const teaGeometry = new THREE.CylinderGeometry(0.95, 0.75, 2, 32);
+    const flavorColor = flavorColors[config.flavor];
+    const colorValue = getColorValue(flavorColor);
+    
     const teaMaterial = new THREE.MeshStandardMaterial({
-      color: flavorColors[config.flavor],
+      color: colorValue,
       transparent: true,
       opacity: 0.9,
     });
