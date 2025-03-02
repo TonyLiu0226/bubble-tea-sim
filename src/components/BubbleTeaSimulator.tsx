@@ -28,14 +28,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     jelly: 0xE0F2E9,
   };
 
-  // Convert hex color strings to THREE.js compatible color numbers
-  const getColorValue = (hexColor: string) => {
-    // Remove the # if it exists
-    const hex = hexColor.replace('#', '');
-    // Convert to number
-    return parseInt(hex, 16);
-  };
-
   // Initialize Three.js scene
   useEffect(() => {
     if (!mountRef.current) return;
@@ -59,7 +51,7 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
-    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = true;
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
@@ -176,17 +168,20 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
 
     // Tea geometry - use the selected flavor's color
     const teaGeometry = new THREE.CylinderGeometry(0.95, 0.75, 2, 32);
-    const flavorColor = flavorColors[config.flavor];
-    const colorValue = getColorValue(flavorColor);
+    
+    // Get color from flavorColors object directly as a hex string
+    const flavorHex = flavorColors[config.flavor];
+    
+    // Convert hex string to THREE.Color object
+    const threeColor = new THREE.Color(flavorHex);
     
     const teaMaterial = new THREE.MeshStandardMaterial({
-      color: colorValue,
+      color: threeColor,
       transparent: true,
       opacity: 0.9,
     });
 
     const tea = new THREE.Mesh(teaGeometry, teaMaterial);
-    tea.position.y = 0.5;
     tea.position.y = 0.3;
     teaRef.current = tea;
     cupRef.current.add(tea);
