@@ -285,13 +285,13 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
       const angle = Math.random() * Math.PI * 2;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-      const y = 1.5 + Math.random() * 0.3;
+      const y = 0.5 + Math.random() * 1.0;
       return new THREE.Vector3(x, y, z);
     };
 
     config.toppings.forEach((toppingType) => {
       let geometry, material;
-      const numberOfPieces = Math.floor(Math.random() * 3) + 3;
+      const numberOfPieces = Math.floor(Math.random() * 5) + 8;
 
       for (let i = 0; i < numberOfPieces; i++) {
         switch (toppingType) {
