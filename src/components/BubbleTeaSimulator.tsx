@@ -44,11 +44,15 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     camera.position.set(0, 1.5, 5);
     cameraRef.current = camera;
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: true, 
+      alpha: true,
+    });
     renderer.setSize(mountRef.current.clientWidth, mountRef.current.clientHeight);
     renderer.setPixelRatio(window.devicePixelRatio);
     renderer.outputColorSpace = THREE.SRGBColorSpace;
     renderer.shadowMap.enabled = true;
+    renderer.sortObjects = false;
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
 
@@ -185,30 +189,42 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     const liquidMaterial = new THREE.MeshStandardMaterial({
       color: threeColor,
       transparent: false,
+      opacity: 0.9,
       roughness: 0.2,
       metalness: 0.1,
       emissive: threeColor,
       emissiveIntensity: 0.4,
+      depthWrite: false,
+      blending: THREE.CustomBlending,
+      blendSrc: THREE.SrcAlphaFactor,
+      blendDst: THREE.OneMinusSrcAlphaFactor,
     });
 
     const liquid = new THREE.Mesh(liquidGeometry, liquidMaterial);
     liquid.position.y = liquidTopPosition;
     liquidRef.current = liquid;
     cupRef.current.add(liquid);
+    liquid.renderOrder = 1;
 
     const innerLiquidGeometry = new THREE.CylinderGeometry(0.85, 0.65, liquidHeight - 0.1, 32);
     const innerLiquidMaterial = new THREE.MeshStandardMaterial({
       color: threeColor,
-      transparent: false,
+      transparent: true,
+      opacity: 0.9,
       roughness: 0.1,
       metalness: 0.2,
       emissive: threeColor,
       emissiveIntensity: 0.6,
+      depthWrite: false,
+      blending: THREE.CustomBlending,
+      blendSrc: THREE.SrcAlphaFactor,
+      blendDst: THREE.OneMinusSrcAlphaFactor,
     });
     
     const innerLiquid = new THREE.Mesh(innerLiquidGeometry, innerLiquidMaterial);
     innerLiquid.position.y = liquidTopPosition;
     cupRef.current.add(innerLiquid);
+    innerLiquid.renderOrder = 2;
 
     const liquidVertices = [];
     const initialPositions = [];
@@ -231,18 +247,19 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     const liquidSurfaceMaterial = new THREE.MeshStandardMaterial({
       color: threeColor,
       transparent: true,
-      opacity: 0.9,
+      opacity: 0.5,
       roughness: 0.1,
       metalness: 0.3,
       emissive: threeColor,
       emissiveIntensity: 0.7,
       side: THREE.DoubleSide,
+      depthWrite: false,
     });
     
     const liquidSurface = new THREE.Mesh(liquidSurfaceGeometry, liquidSurfaceMaterial);
     liquidSurface.rotation.x = -Math.PI / 2;
     liquidSurface.position.y = liquidTopPosition + liquidHeight/2 - 0.02;
-    liquidSurface.renderOrder = 1;
+    liquidSurface.renderOrder = 3;
     cupRef.current.add(liquidSurface);
 
     const strawGeometry = new THREE.CylinderGeometry(0.05, 0.05, 4, 16);
@@ -285,13 +302,13 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
       const angle = Math.random() * Math.PI * 2;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-      const y = 0.5 + Math.random() * 1.0;
+      const y = -0.5 + Math.random() * 1.5;
       return new THREE.Vector3(x, y, z);
     };
 
     config.toppings.forEach((toppingType) => {
       let geometry, material;
-      const numberOfPieces = Math.floor(Math.random() * 5) + 8;
+      const numberOfPieces = Math.floor(Math.random() * (2 * config.toppings.length)) + 6;
 
       for (let i = 0; i < numberOfPieces; i++) {
         switch (toppingType) {
@@ -302,7 +319,10 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
               roughness: 0.6,
               metalness: 0.2,
               emissive: toppingColors.blackPearl,
-              emissiveIntensity: 0.2,
+              emissiveIntensity: 0,
+              transparent: false,
+              depthWrite: true,
+              depthTest: true,
             });
             break;
 
@@ -314,6 +334,9 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
               metalness: 0.1,
               emissive: toppingColors.pineapple,
               emissiveIntensity: 0.3,
+              transparent: false,
+              depthWrite: true,
+              depthTest: true,
             });
             break;
 
@@ -325,6 +348,9 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
               metalness: 0.1,
               emissive: toppingColors.octopusBall,
               emissiveIntensity: 0.2,
+              transparent: false,
+              depthWrite: true,
+              depthTest: true,
             });
             break;
 
@@ -343,6 +369,9 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
               metalness: 0.1,
               emissive: toppingColors.squidLeg,
               emissiveIntensity: 0.2,
+              transparent: false,
+              depthWrite: true,
+              depthTest: true,
             });
             break;
 
@@ -354,6 +383,9 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
               metalness: 0.2,
               emissive: toppingColors.jelly,
               emissiveIntensity: 0.3,
+              transparent: false,
+              depthWrite: true,
+              depthTest: true,
             });
             break;
 
@@ -369,7 +401,7 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
         topping.rotation.y = Math.random() * Math.PI;
         topping.rotation.z = Math.random() * Math.PI;
         
-        topping.renderOrder = 10;
+        topping.renderOrder = 3;
         toppingsRef.current.add(topping);
       }
     });
