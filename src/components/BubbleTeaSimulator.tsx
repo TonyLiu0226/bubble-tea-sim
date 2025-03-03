@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from "react";
 import { BubbleTeaConfig } from "@/types/bubbleTea";
 import * as THREE from "three";
@@ -15,6 +16,8 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
   const cupRef = useRef<THREE.Group | null>(null);
+  const liquidRef = useRef<THREE.Mesh | null>(null);
+  const liquidWavesRef = useRef<{ time: number; vertices: THREE.Vector3[]; initialPositions: number[] } | null>(null);
   const toppingsRef = useRef<THREE.Group | null>(null);
   const animationFrameRef = useRef<number | null>(null);
 
@@ -92,6 +95,28 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
         cupRef.current.rotation.y += 0.002;
       }
       
+      // Animate liquid waves
+      if (liquidRef.current && liquidWavesRef.current) {
+        liquidWavesRef.current.time += 0.03;
+        const vertices = liquidRef.current.geometry.attributes.position;
+        const waveData = liquidWavesRef.current;
+        
+        for (let i = 0; i < waveData.vertices.length; i++) {
+          const vertex = waveData.vertices[i];
+          // Only affect vertices at the top of the liquid
+          if (Math.abs(vertex.y - 1.75) < 0.1) {
+            const initialY = waveData.initialPositions[i];
+            const distance = Math.sqrt(vertex.x * vertex.x + vertex.z * vertex.z);
+            // Create wave effect based on distance from center and time
+            const wave = Math.sin(distance * 3 + waveData.time) * 0.03 + 
+                          Math.sin(distance * 2 - waveData.time * 0.7) * 0.02;
+            vertices.setY(i, initialY + wave);
+          }
+        }
+        vertices.needsUpdate = true;
+        liquidRef.current.geometry.computeVertexNormals();
+      }
+      
       if (rendererRef.current && sceneRef.current && cameraRef.current) {
         rendererRef.current.render(sceneRef.current, cameraRef.current);
       }
@@ -143,21 +168,62 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     const threeColor = new THREE.Color(flavorHex);
     console.log("THREE.Color object:", threeColor);
 
+    // Create the transparent cup
     const cupMaterial = new THREE.MeshPhysicalMaterial({
-      color: threeColor,
+      color: 0xffffff,
       transparent: true,
-      opacity: 0.8,
+      opacity: 0.3,
       roughness: 0.1,
-      transmission: 0.3,
-      thickness: 0.5,
-      emissive: threeColor,
-      emissiveIntensity: 0.2,
+      transmission: 0.9,
+      thickness: 0.2
     });
 
     const cupGeometry = new THREE.CylinderGeometry(1, 0.8, 2.5, 32);
     const cup = new THREE.Mesh(cupGeometry, cupMaterial);
     cup.position.y = 0.5;
     cupRef.current.add(cup);
+
+    // Create the liquid inside the cup (90% full)
+    const liquidHeight = 2.25; // 90% of cup height (2.5)
+    const liquidTopPosition = 0.5 - (2.5 - liquidHeight) / 2; // Position for 90% full
+    
+    // Use a higher segment count for the liquid to enable wave animation
+    const liquidGeometry = new THREE.CylinderGeometry(0.95, 0.75, liquidHeight, 32, 16);
+    
+    const liquidMaterial = new THREE.MeshPhysicalMaterial({
+      color: threeColor,
+      transparent: true,
+      opacity: 0.9,
+      roughness: 0.2,
+      transmission: 0.1,
+      thickness: 0.5,
+      emissive: threeColor,
+      emissiveIntensity: 0.2,
+    });
+
+    const liquid = new THREE.Mesh(liquidGeometry, liquidMaterial);
+    liquid.position.y = liquidTopPosition;
+    liquidRef.current = liquid;
+    cupRef.current.add(liquid);
+
+    // Setup for wave animation
+    const liquidVertices = [];
+    const initialPositions = [];
+    
+    // Store initial vertices positions for wave animation
+    const positionAttribute = liquidGeometry.attributes.position;
+    for (let i = 0; i < positionAttribute.count; i++) {
+      const vertex = new THREE.Vector3();
+      vertex.fromBufferAttribute(positionAttribute, i);
+      liquidVertices.push(vertex);
+      initialPositions.push(vertex.y);
+    }
+    
+    liquidWavesRef.current = {
+      time: 0,
+      vertices: liquidVertices,
+      initialPositions: initialPositions
+    };
 
     const strawGeometry = new THREE.CylinderGeometry(0.05, 0.05, 4, 16);
     const strawMaterial = new THREE.MeshStandardMaterial({ color: 0xff5555 });
