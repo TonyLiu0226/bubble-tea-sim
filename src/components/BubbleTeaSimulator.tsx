@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from "react";
 import { BubbleTeaConfig } from "@/types/bubbleTea";
 import * as THREE from "three";
@@ -95,7 +94,6 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
         cupRef.current.rotation.y += 0.002;
       }
       
-      // Animate liquid waves
       if (liquidRef.current && liquidWavesRef.current) {
         liquidWavesRef.current.time += 0.03;
         const vertices = liquidRef.current.geometry.attributes.position;
@@ -103,11 +101,9 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
         
         for (let i = 0; i < waveData.vertices.length; i++) {
           const vertex = waveData.vertices[i];
-          // Only affect vertices at the top of the liquid
           if (Math.abs(vertex.y - 1.75) < 0.1) {
             const initialY = waveData.initialPositions[i];
             const distance = Math.sqrt(vertex.x * vertex.x + vertex.z * vertex.z);
-            // Create wave effect based on distance from center and time
             const wave = Math.sin(distance * 3 + waveData.time) * 0.03 + 
                           Math.sin(distance * 2 - waveData.time * 0.7) * 0.02;
             vertices.setY(i, initialY + wave);
@@ -168,14 +164,13 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     const threeColor = new THREE.Color(flavorHex);
     console.log("THREE.Color object:", threeColor);
 
-    // Create the transparent cup
     const cupMaterial = new THREE.MeshPhysicalMaterial({
       color: 0xffffff,
       transparent: true,
       opacity: 0.3,
       roughness: 0.1,
       transmission: 0.9,
-      thickness: 0.2
+      thickness: 0.05,
     });
 
     const cupGeometry = new THREE.CylinderGeometry(1, 0.8, 2.5, 32);
@@ -183,22 +178,17 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     cup.position.y = 0.5;
     cupRef.current.add(cup);
 
-    // Create the liquid inside the cup (90% full)
-    const liquidHeight = 2.25; // 90% of cup height (2.5)
-    const liquidTopPosition = 0.5 - (2.5 - liquidHeight) / 2; // Position for 90% full
-    
-    // Use a higher segment count for the liquid to enable wave animation
+    const liquidHeight = 2.25;
+    const liquidTopPosition = 0.5 - (2.5 - liquidHeight) / 2;
+
     const liquidGeometry = new THREE.CylinderGeometry(0.95, 0.75, liquidHeight, 32, 16);
-    
-    const liquidMaterial = new THREE.MeshPhysicalMaterial({
+    const liquidMaterial = new THREE.MeshStandardMaterial({
       color: threeColor,
-      transparent: true,
-      opacity: 0.9,
+      transparent: false,
       roughness: 0.2,
-      transmission: 0.1,
-      thickness: 0.5,
+      metalness: 0.1,
       emissive: threeColor,
-      emissiveIntensity: 0.2,
+      emissiveIntensity: 0.4,
     });
 
     const liquid = new THREE.Mesh(liquidGeometry, liquidMaterial);
@@ -206,11 +196,23 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     liquidRef.current = liquid;
     cupRef.current.add(liquid);
 
-    // Setup for wave animation
+    const innerLiquidGeometry = new THREE.CylinderGeometry(0.85, 0.65, liquidHeight - 0.1, 32);
+    const innerLiquidMaterial = new THREE.MeshStandardMaterial({
+      color: threeColor,
+      transparent: false,
+      roughness: 0.1,
+      metalness: 0.2,
+      emissive: threeColor,
+      emissiveIntensity: 0.6,
+    });
+    
+    const innerLiquid = new THREE.Mesh(innerLiquidGeometry, innerLiquidMaterial);
+    innerLiquid.position.y = liquidTopPosition;
+    cupRef.current.add(innerLiquid);
+
     const liquidVertices = [];
     const initialPositions = [];
     
-    // Store initial vertices positions for wave animation
     const positionAttribute = liquidGeometry.attributes.position;
     for (let i = 0; i < positionAttribute.count; i++) {
       const vertex = new THREE.Vector3();
@@ -224,6 +226,23 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
       vertices: liquidVertices,
       initialPositions: initialPositions
     };
+
+    const liquidSurfaceGeometry = new THREE.CircleGeometry(0.95, 32);
+    const liquidSurfaceMaterial = new THREE.MeshStandardMaterial({
+      color: threeColor,
+      transparent: true,
+      opacity: 0.9,
+      roughness: 0.1,
+      metalness: 0.3,
+      emissive: threeColor,
+      emissiveIntensity: 0.7,
+      side: THREE.DoubleSide,
+    });
+    
+    const liquidSurface = new THREE.Mesh(liquidSurfaceGeometry, liquidSurfaceMaterial);
+    liquidSurface.rotation.x = -Math.PI / 2;
+    liquidSurface.position.y = liquidTopPosition + liquidHeight/2 - 0.02;
+    cupRef.current.add(liquidSurface);
 
     const strawGeometry = new THREE.CylinderGeometry(0.05, 0.05, 4, 16);
     const strawMaterial = new THREE.MeshStandardMaterial({ color: 0xff5555 });
