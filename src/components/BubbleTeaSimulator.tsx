@@ -300,6 +300,9 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
             material = new THREE.MeshStandardMaterial({
               color: toppingColors.blackPearl,
               roughness: 0.6,
+              metalness: 0.2,
+              emissive: toppingColors.blackPearl,
+              emissiveIntensity: 0.2,
             });
             break;
 
@@ -308,6 +311,9 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
             material = new THREE.MeshStandardMaterial({
               color: toppingColors.pineapple,
               roughness: 0.4,
+              metalness: 0.1,
+              emissive: toppingColors.pineapple,
+              emissiveIntensity: 0.3,
             });
             break;
 
@@ -316,6 +322,9 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
             material = new THREE.MeshStandardMaterial({
               color: toppingColors.octopusBall,
               roughness: 0.5,
+              metalness: 0.1,
+              emissive: toppingColors.octopusBall,
+              emissiveIntensity: 0.2,
             });
             break;
 
@@ -331,17 +340,20 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
             material = new THREE.MeshStandardMaterial({
               color: toppingColors.squidLeg,
               roughness: 0.4,
+              metalness: 0.1,
+              emissive: toppingColors.squidLeg,
+              emissiveIntensity: 0.2,
             });
             break;
 
           case "jelly":
             geometry = new THREE.BoxGeometry(0.2, 0.2, 0.2);
-            material = new THREE.MeshPhysicalMaterial({
+            material = new THREE.MeshStandardMaterial({
               color: toppingColors.jelly,
-              transparent: true,
-              opacity: 0.8,
               roughness: 0.1,
-              transmission: 0.5,
+              metalness: 0.2,
+              emissive: toppingColors.jelly,
+              emissiveIntensity: 0.3,
             });
             break;
 
@@ -357,7 +369,7 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
         topping.rotation.y = Math.random() * Math.PI;
         topping.rotation.z = Math.random() * Math.PI;
         
-        topping.renderOrder = 2;
+        topping.renderOrder = 10;
         toppingsRef.current.add(topping);
       }
     });
