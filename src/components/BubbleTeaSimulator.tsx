@@ -242,6 +242,7 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
     const liquidSurface = new THREE.Mesh(liquidSurfaceGeometry, liquidSurfaceMaterial);
     liquidSurface.rotation.x = -Math.PI / 2;
     liquidSurface.position.y = liquidTopPosition + liquidHeight/2 - 0.02;
+    liquidSurface.renderOrder = 1;
     cupRef.current.add(liquidSurface);
 
     const strawGeometry = new THREE.CylinderGeometry(0.05, 0.05, 4, 16);
@@ -284,7 +285,7 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
       const angle = Math.random() * Math.PI * 2;
       const x = Math.cos(angle) * radius;
       const z = Math.sin(angle) * radius;
-      const y = Math.random() * 1.2 - 0.5;
+      const y = 1.5 + Math.random() * 0.3;
       return new THREE.Vector3(x, y, z);
     };
 
@@ -355,7 +356,8 @@ const BubbleTeaSimulator: React.FC<BubbleTeaSimulatorProps> = ({ config }) => {
         topping.rotation.x = Math.random() * Math.PI;
         topping.rotation.y = Math.random() * Math.PI;
         topping.rotation.z = Math.random() * Math.PI;
-
+        
+        topping.renderOrder = 2;
         toppingsRef.current.add(topping);
       }
     });
